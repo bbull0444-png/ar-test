@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Kapak Genggam</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Courier New', monospace; 
+            overflow: hidden; 
+        }
+
+        /* Panel Cyberpunk Cyan di Bawah */
+        #info-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 255, 255, 0.05);
+            border-top: 2px solid #00ffff;
+            box-shadow: 0 -5px 30px rgba(0, 255, 255, 0.5);
+            padding: 20px;
+            color: #00ffff;
+            display: none;
+            z-index: 999;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+
+        #info-panel.show {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Scanline Effect */
+        #info-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+            animation: scanline 3s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(300px); opacity: 0; }
+        }
+
+        .panel-header {
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00ffff;
+            border-bottom: 1px solid #00ffff;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .panel-content strong {
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .panel-content p {
+            margin-bottom: 10px;
+        }
+
+        /* Navigation Buttons */
+        .view-nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .view-nav button {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .view-nav button:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            transform: scale(1.05);
+        }
+
+        .view-nav button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Instructions Overlay */
+        #instructions {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 255, 0.9);
+            color: #000;
+            padding: 15px 30px;
+            border-radius: 30px;
+            z-index: 998;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.6);
+            max-width: 90%;
+        }
+
+        /* Loading Indicator */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ffff;
+            font-size: 18px;
+            z-index: 997;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        /* View Indicator */
+        .view-indicator {
+            text-align: center;
+            color: #00ffff;
+            font-size: 12px;
+            margin-top: 10px;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #info-panel {
+                padding: 15px;
+            }
+            .panel-header {
+                font-size: 16px;
+            }
+            .panel-content {
+                font-size: 12px;
+            }
+            .view-nav button {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions">📷 Arahkan kamera ke Barcode Marker 3</div>
+    <div class="loading" id="loading">Memuat AR...</div>
+
+    <!-- Info Panel Cyberpunk -->
+    <div id="info-panel">
+        <div class="panel-header">
+            <span id="panel-title">🪓 KAPAK GENGGAM</span>
+        </div>
+        <div class="panel-content">
+            <p><strong>Fungsi Utama:</strong></p>
+            <p>• Memotong daging hewan buruan</p>
+            <p>• Menguliti binatang hasil berburu</p>
+            <p>• Mengolah kayu untuk berbagai keperluan</p>
+            <p>• Menggali umbi sebagai sumber makanan</p>
+            <p>• Memecah tulang atau batu kecil</p>
+            <p style="margin-top: 15px;"><strong>Era:</strong> Paleolitikum (Zaman Batu Tua)</p>
+            <p><strong>Lokasi Penemuan:</strong> Pacitan, Jawa Timur</p>
+            <p><strong>Ditemukan oleh:</strong> Von Koenigswald (1930-an)</p>
+            <p><strong>Kebudayaan:</strong> Kebudayaan Pacitan</p>
+        </div>
+
+        <!-- Navigation untuk Multiple Views -->
+        <div class="view-nav">
+            <button id="prev-view">◄ Prev</button>
+            <button id="next-view">Next ►</button>
+        </div>
+        <div class="view-indicator">
+            View: <span id="current-view">1</span> / 3
+        </div>
+    </div>
+
+    <!-- AR Scene -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
+        vr-mode-ui="enabled: false">
+        
+        <a-entity camera></a-entity>
+
+        <!-- Barcode 3: Kapak Genggam dengan Multiple Views -->
+        <a-marker type="barcode" value="3" id="marker-kapak">
+            <a-image 
+                id="kapak-image"
+                src="models/kapak-genggam-1.png" 
+                scale="2 2 2" 
+                position="0 0.5 0" 
+                rotation="-90 0 0"
+                transparent="true"
+                shader="flat"
+                opacity="0.95">
+            </a-image>
+        </a-marker>
+
+    </a-scene>
+
+    <script>
+        const loading = document.getElementById('loading');
+        const infoPanel = document.getElementById('info-panel');
+        const marker = document.getElementById('marker-kapak');
+        const kapakImage = document.getElementById('kapak-image');
+        const prevBtn = document.getElementById('prev-view');
+        const nextBtn = document.getElementById('next-view');
+        const currentViewSpan = document.getElementById('current-view');
+
+        // Array untuk multiple views
+        const views = [
+            'models/kapak-genggam-1.png',  // View 1 (kiri)
+            'models/kapak-genggam-2.png',  // View 2 (tengah)
+            'models/kapak-genggam-3.png'   // View 3 (kanan)
+        ];
+
+        let currentViewIndex = 0;
+
+        // Update view buttons state
+        function updateViewButtons() {
+            prevBtn.disabled = currentViewIndex === 0;
+            nextBtn.disabled = currentViewIndex === views.length - 1;
+            currentViewSpan.textContent = currentViewIndex + 1;
+        }
+
+        // Change view
+        function changeView(direction) {
+            const newIndex = currentViewIndex + direction;
+            if (newIndex >= 0 && newIndex < views.length) {
+                currentViewIndex = newIndex;
+                kapakImage.setAttribute('src', views[currentViewIndex]);
+                updateViewButtons();
+            }
+        }
+
+        // Event listeners untuk navigation
+        prevBtn.addEventListener('click', () => changeView(-1));
+        nextBtn.addEventListener('click', () => changeView(1));
+
+        // Marker found - tampilkan panel
+        marker.addEventListener('markerFound', function() {
+            console.log('✅ Marker 3 detected - Kapak Genggam');
+            loading.style.display = 'none';
+            infoPanel.classList.add('show');
+            currentViewIndex = 0;
+            kapakImage.setAttribute('src', views[0]);
+            updateViewButtons();
+        });
+
+        // Marker lost - sembunyikan panel
+        marker.addEventListener('markerLost', function() {
+            console.log('❌ Marker 3 lost');
+            loading.style.display = 'block';
+            loading.textContent = 'Marker hilang, cari Barcode 3...';
+            infoPanel.classList.remove('show');
+        });
+
+        // Initial loading message
+        setTimeout(function() {
+            loading.textContent = 'Cari Barcode Marker 3 dengan kamera...';
+        }, 2000);
+
+        // Initialize button states
+        updateViewButtons();
+    </script>
+</body>
+</html>
