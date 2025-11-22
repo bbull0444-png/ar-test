@@ -38,18 +38,33 @@
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+            width: 100vw !important;
+            height: 100vh !important;
             margin: 0 !important;
             padding: 0 !important;
         }
 
         .a-canvas {
-            width: 100% !important;
-            height: 100% !important;
+            width: 100vw !important;
+            height: 100vh !important;
             top: 0 !important;
             left: 0 !important;
             position: fixed !important;
+            object-fit: cover !important;
+        }
+
+        /* Force video element full screen */
+        video {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            min-width: 100% !important;
+            min-height: 100% !important;
+            width: auto !important;
+            height: auto !important;
+            transform: translate(-50%, -50%) !important;
+            object-fit: cover !important;
+            z-index: -1 !important;
         }
 
         #arjsDebugUIContainer {
@@ -290,9 +305,9 @@
     <!-- AR Scene -->
     <a-scene 
         embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960;" 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best;" 
         vr-mode-ui="enabled: false"
-        renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: true;">
+        renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: false;">
         
         <a-entity camera look-controls-enabled="false" wasd-controls-enabled="false"></a-entity>
 
@@ -392,16 +407,32 @@
         // Initialize button states
         updateViewButtons();
 
-        // Force canvas resize after scene loads
+        // Force canvas and video resize after scene loads
         window.addEventListener('load', function() {
             setTimeout(function() {
                 const canvas = document.querySelector('.a-canvas');
+                const video = document.querySelector('video');
+                
                 if (canvas) {
-                    canvas.style.width = '100%';
-                    canvas.style.height = '100%';
+                    canvas.style.width = '100vw';
+                    canvas.style.height = '100vh';
                     canvas.style.position = 'fixed';
                     canvas.style.top = '0';
                     canvas.style.left = '0';
+                    canvas.style.objectFit = 'cover';
+                }
+                
+                if (video) {
+                    video.style.position = 'fixed';
+                    video.style.top = '50%';
+                    video.style.left = '50%';
+                    video.style.minWidth = '100%';
+                    video.style.minHeight = '100%';
+                    video.style.width = 'auto';
+                    video.style.height = 'auto';
+                    video.style.transform = 'translate(-50%, -50%)';
+                    video.style.objectFit = 'cover';
+                    video.style.zIndex = '-1';
                 }
             }, 1000);
         });
