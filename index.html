@@ -2,67 +2,23 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AR Kapak Genggam</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Courier New', monospace; 
+            overflow: hidden; 
         }
 
-        body {
-            font-family: 'Courier New', monospace;
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Force AR canvas full width */
-        .a-canvas {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        /* Model Display Area - Di tengah atas */
-        #model-display {
-            position: fixed;
-            top: 15%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60%;
-            max-width: 300px;
-            height: 30vh;
-            z-index: 9995;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid rgba(0, 255, 255, 0.3);
-            border-radius: 10px;
-            background: rgba(0, 20, 20, 0.3);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-        }
-
-        #model-display.show {
-            display: flex;
-        }
-
-        #model-display img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.6));
-        }
-
-        /* Info Panel Cyberpunk Cyan */
+        /* Info Panel Cyberpunk Cyan di Bawah */
         #info-panel {
             position: fixed;
             bottom: 0;
@@ -75,9 +31,8 @@
             color: #00ffff;
             display: none;
             z-index: 9999;
-            max-height: 40vh;
+            max-height: 42vh;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
         }
 
         #info-panel.show {
@@ -86,14 +41,8 @@
         }
 
         @keyframes slideUp {
-            from {
-                transform: translateY(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
         }
 
         /* Scanline Effect */
@@ -110,20 +59,14 @@
         }
 
         @keyframes scanline {
-            0% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(300px);
-                opacity: 0;
-            }
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(250px); opacity: 0; }
         }
 
         .panel-header {
             font-size: 18px;
             font-weight: bold;
-            text-shadow: 0 0 15px #00ffff, 0 0 25px #00ffff;
+            text-shadow: 0 0 15px #00ffff;
             border-bottom: 1px solid #00ffff;
             padding-bottom: 8px;
             margin-bottom: 12px;
@@ -132,7 +75,6 @@
         .panel-content {
             font-size: 13px;
             line-height: 1.6;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
 
         .panel-content strong {
@@ -167,13 +109,11 @@
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
             border-radius: 5px;
             min-width: 100px;
-            text-shadow: 0 0 5px #00ffff;
         }
 
         .view-nav button:active {
             background: rgba(0, 255, 255, 0.3);
-            box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
-            transform: scale(0.98);
+            transform: scale(0.95);
         }
 
         .view-nav button:disabled {
@@ -187,7 +127,6 @@
             font-size: 12px;
             margin-top: 8px;
             opacity: 0.7;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
 
         /* Instructions */
@@ -224,25 +163,16 @@
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
             text-align: center;
             max-width: 80%;
-            text-shadow: 0 0 10px #00ffff;
         }
 
         /* Responsive */
         @media (max-width: 480px) {
-            .panel-header {
-                font-size: 16px;
-            }
-            .panel-content {
-                font-size: 12px;
-            }
+            .panel-header { font-size: 16px; }
+            .panel-content { font-size: 12px; }
             .view-nav button {
                 padding: 10px 20px;
                 font-size: 13px;
                 min-width: 85px;
-            }
-            #instructions {
-                font-size: 12px;
-                padding: 10px 20px;
             }
         }
     </style>
@@ -250,11 +180,6 @@
 <body>
     <div id="instructions">📷 Arahkan kamera ke Barcode 3</div>
     <div class="loading" id="loading">Memuat AR...</div>
-
-    <!-- Model Display - Di tengah atas -->
-    <div id="model-display">
-        <img id="model-image" src="" alt="Kapak Genggam">
-    </div>
 
     <!-- Info Panel -->
     <div id="info-panel">
@@ -280,7 +205,7 @@
         </div>
     </div>
 
-    <!-- AR Scene (Simple, no extra config) -->
+    <!-- AR Scene - SIMPLE -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
@@ -289,31 +214,25 @@
         <a-camera></a-camera>
 
         <a-marker type="barcode" value="3" id="marker-kapak">
-            <!-- Marker cuma buat trigger, model ditampilkan di HTML overlay -->
+            <a-image 
+                id="kapak-image"
+                src="models/kapak-genggam-1.png" 
+                scale="1.5 1.5 1.5" 
+                position="0 0 0" 
+                rotation="-90 0 0"
+                transparent="true"
+                shader="flat"
+                opacity="0.95">
+            </a-image>
         </a-marker>
 
     </a-scene>
 
     <script>
-        // Prevent zoom gestures
-        document.addEventListener('gesturestart', function(e) {
-            e.preventDefault();
-        });
-
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            const now = Date.now();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-
         const loading = document.getElementById('loading');
         const infoPanel = document.getElementById('info-panel');
-        const modelDisplay = document.getElementById('model-display');
-        const modelImage = document.getElementById('model-image');
         const marker = document.getElementById('marker-kapak');
+        const kapakImage = document.getElementById('kapak-image');
         const prevBtn = document.getElementById('prev-view');
         const nextBtn = document.getElementById('next-view');
         const currentViewSpan = document.getElementById('current-view');
@@ -337,7 +256,7 @@
             const newIndex = currentViewIndex + direction;
             if (newIndex >= 0 && newIndex < views.length) {
                 currentViewIndex = newIndex;
-                modelImage.src = views[currentViewIndex];
+                kapakImage.setAttribute('src', views[currentViewIndex]);
                 updateViewButtons();
             }
         }
@@ -346,12 +265,11 @@
         nextBtn.addEventListener('click', () => changeView(1));
 
         marker.addEventListener('markerFound', function() {
-            console.log('✅ Marker 3 found');
+            console.log('✅ Marker 3 detected');
             loading.style.display = 'none';
-            modelDisplay.classList.add('show');
             infoPanel.classList.add('show');
             currentViewIndex = 0;
-            modelImage.src = views[0];
+            kapakImage.setAttribute('src', views[0]);
             updateViewButtons();
         });
 
@@ -359,24 +277,14 @@
             console.log('❌ Marker 3 lost');
             loading.style.display = 'block';
             loading.textContent = 'Marker hilang, cari Barcode 3...';
-            modelDisplay.classList.remove('show');
             infoPanel.classList.remove('show');
         });
 
-        setTimeout(function() {
+        setTimeout(() => {
             loading.textContent = 'Cari Barcode 3 dengan kamera...';
         }, 2000);
 
         updateViewButtons();
-
-        // Fix canvas width after load
-        setTimeout(function() {
-            const canvas = document.querySelector('.a-canvas');
-            if (canvas) {
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-            }
-        }, 1500);
     </script>
 </body>
 </html>
