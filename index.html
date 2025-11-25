@@ -19,7 +19,6 @@
             background: #000;
         }
 
-        /* ========== INSTRUCTIONS ========== */
         #instructions {
             position: fixed;
             top: 15px;
@@ -43,7 +42,6 @@
             pointer-events: none;
         }
 
-        /* ========== LOADING ========== */
         .loading {
             position: fixed;
             top: 50%;
@@ -61,7 +59,6 @@
             max-width: 80%;
         }
 
-        /* ========== INFO PANEL (Kapak Genggam) ========== */
         #info-panel-kapak {
             position: fixed;
             bottom: 0;
@@ -83,7 +80,6 @@
             animation: slideUp 0.4s ease-out;
         }
 
-        /* ========== INFO PANEL (Borobudur) ========== */
         #info-panel-borobudur {
             position: fixed;
             bottom: 0;
@@ -110,7 +106,6 @@
             to { transform: translateY(0); }
         }
 
-        /* Scanline Effect */
         #info-panel-kapak::before,
         #info-panel-borobudur::before {
             content: '';
@@ -152,7 +147,6 @@
             margin-bottom: 6px;
         }
 
-        /* ========== NAVIGATION BUTTONS ========== */
         .view-nav {
             display: flex;
             justify-content: center;
@@ -195,7 +189,6 @@
             opacity: 0.7;
         }
 
-        /* ========== BIG START VR BUTTON ========== */
         #start-vr-btn {
             position: fixed;
             top: 50%;
@@ -232,7 +225,6 @@
             box-shadow: 0 0 60px rgba(0, 255, 255, 1);
         }
 
-        /* ========== VR MODE ========== */
         #vr-container {
             display: none;
             position: fixed;
@@ -248,7 +240,6 @@
             display: block;
         }
 
-        /* VR Navigation Hotspots */
         .vr-hotspot {
             position: fixed;
             background: rgba(0, 255, 255, 0.8);
@@ -319,7 +310,6 @@
             transform: translateX(-50%) scale(0.95);
         }
 
-        /* ========== RESPONSIVE ========== */
         @media (max-width: 480px) {
             #info-panel-kapak,
             #info-panel-borobudur {
@@ -345,17 +335,14 @@
     </style>
 </head>
 <body>
-    <!-- ========== AR MODE ========== -->
     <div id="ar-mode">
         <div id="instructions">📷 Scan Barcode 3 (Kapak) atau Barcode 0 (Borobudur)</div>
         <div class="loading" id="loading">Memuat AR...</div>
 
-        <!-- Start VR Button (untuk marker Borobudur) -->
         <button id="start-vr-btn">
             🕌 MULAI TUR<br>BOROBUDUR
         </button>
 
-        <!-- Info Panel Kapak -->
         <div id="info-panel-kapak">
             <div class="panel-header">🪓 KAPAK GENGGAM</div>
             <div class="panel-content">
@@ -379,7 +366,6 @@
             </div>
         </div>
 
-        <!-- Info Panel Borobudur (di AR mode) -->
         <div id="info-panel-borobudur">
             <div class="panel-header">🕌 CANDI BOROBUDUR</div>
             <div class="panel-content">
@@ -396,7 +382,6 @@
             </div>
         </div>
 
-        <!-- AR Scene -->
         <a-scene 
             embedded 
             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
@@ -404,11 +389,10 @@
             
             <a-camera></a-camera>
 
-            <!-- Marker 3: Kapak Genggam -->
             <a-marker type="barcode" value="3" id="marker-kapak">
                 <a-image 
                     id="kapak-image"
-                    src="models/kapak-genggam-1.png" 
+                    src="https://bbull0444-png.github.io/ar-test/models/kapak-genggam-1.png" 
                     scale="1.5 1.5 1.5" 
                     position="0 0 0" 
                     rotation="-90 0 0"
@@ -418,7 +402,6 @@
                 </a-image>
             </a-marker>
 
-            <!-- Marker 0: Borobudur (trigger untuk VR) -->
             <a-marker type="barcode" value="0" id="marker-borobudur">
                 <a-text 
                     value="BOROBUDUR\nVR READY" 
@@ -432,30 +415,28 @@
         </a-scene>
     </div>
 
-    <!-- ========== VR MODE ========== -->
     <div id="vr-container">
         <a-scene id="vr-scene" embedded vr-mode-ui="enabled: false">
-            <!-- Sky 360 (akan diganti dinamis) -->
-            <a-sky id="vr-sky" src="SvD/Borobudur-1-360.jpg" rotation="0 -130 0"></a-sky>
+            <a-sky id="vr-sky" src="https://bbull0444-png.github.io/ar-test/SvD/Borobudur-1-360.jpg" rotation="0 0 0"></a-sky>
 
-            <!-- Camera -->
             <a-camera>
                 <a-cursor color="#00ffff"></a-cursor>
             </a-camera>
         </a-scene>
 
-        <!-- Navigation Hotspots -->
         <button class="vr-hotspot" id="hotspot-left">◄ KE KIRI</button>
         <button class="vr-hotspot" id="hotspot-right">KE KANAN ►</button>
         <button class="vr-hotspot" id="hotspot-forward">⬆️ KE DEPAN</button>
         <button class="vr-hotspot" id="hotspot-center">🏛️ KE TENGAH</button>
 
-        <!-- Exit Button -->
         <button id="exit-vr-btn">🚪 KELUAR VR</button>
     </div>
 
     <script>
-        // ========== ELEMENTS ==========
+        // Base URL untuk konsistensi
+        const BASE_URL = 'https://bbull0444-png.github.io/ar-test';
+
+        // Elements
         const loading = document.getElementById('loading');
         const instructions = document.getElementById('instructions');
         const arMode = document.getElementById('ar-mode');
@@ -482,11 +463,11 @@
         const hotspotForward = document.getElementById('hotspot-forward');
         const hotspotCenter = document.getElementById('hotspot-center');
 
-        // ========== KAPAK GENGGAM (Multiple Views) ==========
+        // ========== KAPAK GENGGAM ==========
         const kapakViews = [
-            'models/kapak-genggam-1.png',
-            'models/kapak-genggam-2.png',
-            'models/kapak-genggam-3.png'
+            `${BASE_URL}/models/kapak-genggam-1.png`,
+            `${BASE_URL}/models/kapak-genggam-2.png`,
+            `${BASE_URL}/models/kapak-genggam-3.png`
         ];
         let currentKapakIndex = 0;
 
@@ -502,13 +483,13 @@
                 currentKapakIndex = newIndex;
                 kapakImage.setAttribute('src', kapakViews[currentKapakIndex]);
                 updateKapakButtons();
+                console.log(`📸 Kapak view changed to: ${currentKapakIndex + 1}`);
             }
         }
 
         prevBtnKapak.addEventListener('click', () => changeKapakView(-1));
         nextBtnKapak.addEventListener('click', () => changeKapakView(1));
 
-        // Kapak Marker Events
         markerKapak.addEventListener('markerFound', function() {
             console.log('✅ Marker 3 (Kapak) detected');
             loading.style.display = 'none';
@@ -529,16 +510,15 @@
 
         // ========== BOROBUDUR VR ==========
         const borobudurViews = {
-            center: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-1-360.jpg',
-            left: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-2-360.jpg',
-            right: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-3-360.jpg',
-            forward: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-4-360.jpg'
+            center: `${BASE_URL}/SvD/Borobudur-1-360.jpg`,
+            left: `${BASE_URL}/SvD/Borobudur-2-360.jpg`,
+            right: `${BASE_URL}/SvD/Borobudur-3-360.jpg`,
+            forward: `${BASE_URL}/SvD/Borobudur-4-360.jpg`
         };
 
         let currentVRView = 'center';
 
         function updateHotspots() {
-            // Hide/show hotspots based on current view
             if (currentVRView === 'center') {
                 hotspotLeft.style.display = 'block';
                 hotspotRight.style.display = 'block';
@@ -556,15 +536,14 @@
             currentVRView = view;
             vrSky.setAttribute('src', borobudurViews[view]);
             updateHotspots();
+            console.log(`🕌 VR view changed to: ${view}`);
         }
 
-        // Hotspot Events
         hotspotLeft.addEventListener('click', () => changeVRView('left'));
         hotspotRight.addEventListener('click', () => changeVRView('right'));
         hotspotForward.addEventListener('click', () => changeVRView('forward'));
         hotspotCenter.addEventListener('click', () => changeVRView('center'));
 
-        // Borobudur Marker Events
         markerBorobudur.addEventListener('markerFound', function() {
             console.log('✅ Marker 0 (Borobudur) detected');
             loading.style.display = 'none';
@@ -581,7 +560,6 @@
             startVRBtn.classList.remove('show');
         });
 
-        // Start VR Button
         startVRBtn.addEventListener('click', function() {
             console.log('🚀 Entering VR Mode');
             arMode.style.display = 'none';
@@ -591,7 +569,6 @@
             updateHotspots();
         });
 
-        // Exit VR Button
         exitVRBtn.addEventListener('click', function() {
             console.log('🚪 Exiting VR Mode');
             vrContainer.classList.remove('active');
@@ -600,13 +577,16 @@
             loading.textContent = 'Kembali ke AR Mode...';
         });
 
-        // ========== INITIALIZATION ==========
+        // Initialization
         setTimeout(() => {
             loading.textContent = 'Cari Barcode 3 (Kapak) atau 0 (Borobudur)...';
         }, 2000);
 
         updateKapakButtons();
         updateHotspots();
+
+        console.log('🎯 AR Museum initialized');
+        console.log('📦 Base URL:', BASE_URL);
     </script>
 </body>
 </html>
