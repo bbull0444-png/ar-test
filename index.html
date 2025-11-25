@@ -1,31 +1,612 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  </head>
+    <title>AR Museum - Kapak & Borobudur</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Courier New', monospace; 
+            overflow: hidden;
+            background: #000;
+        }
 
-  <body style="margin:0; overflow:hidden;">
-    <a-scene embedded arjs="sourceType: webcam;">
-      
-      <!-- Coba barcode ID 0 sampai 19 -->
-      <!-- Setiap ID menampilkan box di warna berbeda -->
-      <!-- Begitu marker cocok, kamu akan lihat box muncul -->
-      
-      <a-marker type="barcode" value="0"><a-box color="red"></a-box></a-marker>
-      <a-marker type="barcode" value="1"><a-box color="green"></a-box></a-marker>
-      <a-marker type="barcode" value="2"><a-box color="blue"></a-box></a-marker>
-      <a-marker type="barcode" value="3"><a-box color="yellow"></a-box></a-marker>
-      <a-marker type="barcode" value="4"><a-box color="purple"></a-box></a-marker>
-      <a-marker type="barcode" value="5"><a-box color="orange"></a-box></a-marker>
-      <a-marker type="barcode" value="6"><a-box color="pink"></a-box></a-marker>
-      <a-marker type="barcode" value="7"><a-box color="cyan"></a-box></a-marker>
-      <a-marker type="barcode" value="8"><a-box color="white"></a-box></a-marker>
-      <a-marker type="barcode" value="9"><a-box color="brown"></a-box></a-marker>
+        /* ========== INSTRUCTIONS ========== */
+        #instructions {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 255, 0.95);
+            color: #000;
+            padding: 12px 25px;
+            border-radius: 25px;
+            z-index: 9998;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.6);
+            max-width: 85%;
+            transition: opacity 0.3s;
+        }
 
+        #instructions.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
 
-      
-      <a-entity camera></a-entity>
-    </a-scene>
-  </body>
+        /* ========== LOADING ========== */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ffff;
+            font-size: 16px;
+            z-index: 9997;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 30px;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            text-align: center;
+            max-width: 80%;
+        }
+
+        /* ========== INFO PANEL (Kapak Genggam) ========== */
+        #info-panel-kapak {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 30, 30, 0.95);
+            border-top: 3px solid #00ffff;
+            box-shadow: 0 -5px 30px rgba(0, 255, 255, 0.6);
+            padding: 12px 15px;
+            color: #00ffff;
+            display: none;
+            z-index: 9999;
+            max-height: 35vh;
+            overflow-y: auto;
+        }
+
+        #info-panel-kapak.show {
+            display: block;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        /* ========== INFO PANEL (Borobudur) ========== */
+        #info-panel-borobudur {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 30, 30, 0.95);
+            border-top: 3px solid #00ffff;
+            box-shadow: 0 -5px 30px rgba(0, 255, 255, 0.6);
+            padding: 12px 15px;
+            color: #00ffff;
+            display: none;
+            z-index: 9999;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+
+        #info-panel-borobudur.show {
+            display: block;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Scanline Effect */
+        #info-panel-kapak::before,
+        #info-panel-borobudur::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            box-shadow: 0 0 15px #00ffff;
+            animation: scanline 3s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(250px); opacity: 0; }
+        }
+
+        .panel-header {
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00ffff;
+            border-bottom: 1px solid #00ffff;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+
+        .panel-content {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .panel-content strong {
+            color: #00ffff;
+            text-shadow: 0 0 8px #00ffff;
+        }
+
+        .panel-content p {
+            margin-bottom: 6px;
+        }
+
+        /* ========== NAVIGATION BUTTONS ========== */
+        .view-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .view-nav button {
+            background: rgba(0, 255, 255, 0.15);
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+            border-radius: 5px;
+            min-width: 90px;
+        }
+
+        .view-nav button:active {
+            background: rgba(0, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .view-nav button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .view-indicator {
+            text-align: center;
+            color: #00ffff;
+            font-size: 11px;
+            margin-top: 6px;
+            opacity: 0.7;
+        }
+
+        /* ========== BIG START VR BUTTON ========== */
+        #start-vr-btn {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #00ffff, #00cccc);
+            color: #000;
+            border: 4px solid #00ffff;
+            padding: 25px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            z-index: 10000;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+            transition: all 0.3s;
+            opacity: 0;
+            display: none;
+        }
+
+        #start-vr-btn.show {
+            display: block;
+            animation: popIn 0.5s ease-out forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            60% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        #start-vr-btn:active {
+            transform: translate(-50%, -50%) scale(0.95);
+            box-shadow: 0 0 60px rgba(0, 255, 255, 1);
+        }
+
+        /* ========== VR MODE ========== */
+        #vr-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10001;
+            background: #000;
+        }
+
+        #vr-container.active {
+            display: block;
+        }
+
+        /* VR Navigation Hotspots */
+        .vr-hotspot {
+            position: fixed;
+            background: rgba(0, 255, 255, 0.8);
+            color: #000;
+            padding: 12px 20px;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            transition: all 0.3s;
+            z-index: 10002;
+        }
+
+        .vr-hotspot:active {
+            background: rgba(0, 255, 255, 1);
+            transform: scale(0.95);
+        }
+
+        #hotspot-left {
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #hotspot-right {
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #hotspot-forward {
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #hotspot-center {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 215, 0, 0.9);
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        #exit-vr-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.8);
+            color: #fff;
+            padding: 12px 30px;
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+            transition: all 0.3s;
+            z-index: 10002;
+        }
+
+        #exit-vr-btn:active {
+            background: rgba(255, 0, 0, 1);
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 480px) {
+            #info-panel-kapak,
+            #info-panel-borobudur {
+                max-height: 32vh;
+                padding: 10px 12px;
+            }
+            .panel-header { font-size: 15px; }
+            .panel-content { font-size: 11px; }
+            .view-nav button {
+                padding: 8px 16px;
+                font-size: 12px;
+                min-width: 75px;
+            }
+            #start-vr-btn {
+                padding: 20px 35px;
+                font-size: 20px;
+            }
+            .vr-hotspot {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ========== AR MODE ========== -->
+    <div id="ar-mode">
+        <div id="instructions">📷 Scan Barcode 3 (Kapak) atau Barcode 0 (Borobudur)</div>
+        <div class="loading" id="loading">Memuat AR...</div>
+
+        <!-- Start VR Button (untuk marker Borobudur) -->
+        <button id="start-vr-btn">
+            🕌 MULAI TUR<br>BOROBUDUR
+        </button>
+
+        <!-- Info Panel Kapak -->
+        <div id="info-panel-kapak">
+            <div class="panel-header">🪓 KAPAK GENGGAM</div>
+            <div class="panel-content">
+                <p><strong>Fungsi Utama:</strong></p>
+                <p>• Memotong daging hewan buruan</p>
+                <p>• Menguliti binatang hasil berburu</p>
+                <p>• Mengolah kayu untuk berbagai keperluan</p>
+                <p>• Menggali umbi sebagai sumber makanan</p>
+                <p>• Memecah tulang atau batu kecil</p>
+                <p style="margin-top: 12px;"><strong>Era:</strong> Paleolitikum (Zaman Batu Tua)</p>
+                <p><strong>Lokasi:</strong> Pacitan, Jawa Timur</p>
+                <p><strong>Penemu:</strong> Von Koenigswald (1930-an)</p>
+                <p><strong>Kebudayaan:</strong> Kebudayaan Pacitan</p>
+            </div>
+            <div class="view-nav">
+                <button id="prev-view-kapak">◄ Prev</button>
+                <button id="next-view-kapak">Next ►</button>
+            </div>
+            <div class="view-indicator">
+                View: <span id="current-view-kapak">1</span> / 3
+            </div>
+        </div>
+
+        <!-- Info Panel Borobudur (di AR mode) -->
+        <div id="info-panel-borobudur">
+            <div class="panel-header">🕌 CANDI BOROBUDUR</div>
+            <div class="panel-content">
+                <p><strong>Sejarah:</strong></p>
+                <p>Candi Borobudur adalah candi Buddha terbesar di dunia yang dibangun pada abad ke-8 Masehi (sekitar tahun 750-850 M) oleh Dinasti Syailendra pada masa kejayaan Kerajaan Mataram Kuno.</p>
+                <p style="margin-top: 10px;"><strong>Struktur:</strong></p>
+                <p>• 9 tingkat (6 teras berbentuk bujur sangkar, 3 teras melingkar)</p>
+                <p>• 504 arca Buddha dalam berbagai posisi</p>
+                <p>• 2.672 panel relief yang menceritakan kisah Buddha</p>
+                <p>• 72 stupa berlubang di puncak</p>
+                <p style="margin-top: 10px;"><strong>Lokasi:</strong> Magelang, Jawa Tengah</p>
+                <p><strong>Status:</strong> Situs Warisan Dunia UNESCO (1991)</p>
+                <p><strong>Fungsi:</strong> Tempat ibadah dan ziarah umat Buddha</p>
+            </div>
+        </div>
+
+        <!-- AR Scene -->
+        <a-scene 
+            embedded 
+            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
+            vr-mode-ui="enabled: false">
+            
+            <a-camera></a-camera>
+
+            <!-- Marker 3: Kapak Genggam -->
+            <a-marker type="barcode" value="3" id="marker-kapak">
+                <a-image 
+                    id="kapak-image"
+                    src="models/kapak-genggam-1.png" 
+                    scale="1.5 1.5 1.5" 
+                    position="0 0 0" 
+                    rotation="-90 0 0"
+                    transparent="true"
+                    shader="flat"
+                    opacity="0.95">
+                </a-image>
+            </a-marker>
+
+            <!-- Marker 0: Borobudur (trigger untuk VR) -->
+            <a-marker type="barcode" value="0" id="marker-borobudur">
+                <a-text 
+                    value="BOROBUDUR\nVR READY" 
+                    align="center" 
+                    color="#00ffff" 
+                    scale="0.5 0.5 0.5"
+                    position="0 0 0">
+                </a-text>
+            </a-marker>
+
+        </a-scene>
+    </div>
+
+    <!-- ========== VR MODE ========== -->
+    <div id="vr-container">
+        <a-scene id="vr-scene" embedded vr-mode-ui="enabled: false">
+            <!-- Sky 360 (akan diganti dinamis) -->
+            <a-sky id="vr-sky" src="SvD/Borobudur-1-360.jpg" rotation="0 -130 0"></a-sky>
+
+            <!-- Camera -->
+            <a-camera>
+                <a-cursor color="#00ffff"></a-cursor>
+            </a-camera>
+        </a-scene>
+
+        <!-- Navigation Hotspots -->
+        <button class="vr-hotspot" id="hotspot-left">◄ KE KIRI</button>
+        <button class="vr-hotspot" id="hotspot-right">KE KANAN ►</button>
+        <button class="vr-hotspot" id="hotspot-forward">⬆️ KE DEPAN</button>
+        <button class="vr-hotspot" id="hotspot-center">🏛️ KE TENGAH</button>
+
+        <!-- Exit Button -->
+        <button id="exit-vr-btn">🚪 KELUAR VR</button>
+    </div>
+
+    <script>
+        // ========== ELEMENTS ==========
+        const loading = document.getElementById('loading');
+        const instructions = document.getElementById('instructions');
+        const arMode = document.getElementById('ar-mode');
+        const vrContainer = document.getElementById('vr-container');
+
+        // Kapak elements
+        const markerKapak = document.getElementById('marker-kapak');
+        const infoPanelKapak = document.getElementById('info-panel-kapak');
+        const kapakImage = document.getElementById('kapak-image');
+        const prevBtnKapak = document.getElementById('prev-view-kapak');
+        const nextBtnKapak = document.getElementById('next-view-kapak');
+        const currentViewSpanKapak = document.getElementById('current-view-kapak');
+
+        // Borobudur elements
+        const markerBorobudur = document.getElementById('marker-borobudur');
+        const infoPanelBorobudur = document.getElementById('info-panel-borobudur');
+        const startVRBtn = document.getElementById('start-vr-btn');
+        const exitVRBtn = document.getElementById('exit-vr-btn');
+        const vrSky = document.getElementById('vr-sky');
+
+        // Hotspots
+        const hotspotLeft = document.getElementById('hotspot-left');
+        const hotspotRight = document.getElementById('hotspot-right');
+        const hotspotForward = document.getElementById('hotspot-forward');
+        const hotspotCenter = document.getElementById('hotspot-center');
+
+        // ========== KAPAK GENGGAM (Multiple Views) ==========
+        const kapakViews = [
+            'models/kapak-genggam-1.png',
+            'models/kapak-genggam-2.png',
+            'models/kapak-genggam-3.png'
+        ];
+        let currentKapakIndex = 0;
+
+        function updateKapakButtons() {
+            prevBtnKapak.disabled = currentKapakIndex === 0;
+            nextBtnKapak.disabled = currentKapakIndex === kapakViews.length - 1;
+            currentViewSpanKapak.textContent = currentKapakIndex + 1;
+        }
+
+        function changeKapakView(direction) {
+            const newIndex = currentKapakIndex + direction;
+            if (newIndex >= 0 && newIndex < kapakViews.length) {
+                currentKapakIndex = newIndex;
+                kapakImage.setAttribute('src', kapakViews[currentKapakIndex]);
+                updateKapakButtons();
+            }
+        }
+
+        prevBtnKapak.addEventListener('click', () => changeKapakView(-1));
+        nextBtnKapak.addEventListener('click', () => changeKapakView(1));
+
+        // Kapak Marker Events
+        markerKapak.addEventListener('markerFound', function() {
+            console.log('✅ Marker 3 (Kapak) detected');
+            loading.style.display = 'none';
+            infoPanelKapak.classList.add('show');
+            infoPanelBorobudur.classList.remove('show');
+            startVRBtn.classList.remove('show');
+            currentKapakIndex = 0;
+            kapakImage.setAttribute('src', kapakViews[0]);
+            updateKapakButtons();
+        });
+
+        markerKapak.addEventListener('markerLost', function() {
+            console.log('❌ Marker 3 lost');
+            loading.style.display = 'block';
+            loading.textContent = 'Marker hilang, cari Barcode 3 atau 0...';
+            infoPanelKapak.classList.remove('show');
+        });
+
+        // ========== BOROBUDUR VR ==========
+        const borobudurViews = {
+            center: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-1-360.jpg',
+            left: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-2-360.jpg',
+            right: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-3-360.jpg',
+            forward: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-4-360.jpg'
+        };
+
+        let currentVRView = 'center';
+
+        function updateHotspots() {
+            // Hide/show hotspots based on current view
+            if (currentVRView === 'center') {
+                hotspotLeft.style.display = 'block';
+                hotspotRight.style.display = 'block';
+                hotspotForward.style.display = 'block';
+                hotspotCenter.style.display = 'none';
+            } else {
+                hotspotLeft.style.display = 'none';
+                hotspotRight.style.display = 'none';
+                hotspotForward.style.display = 'none';
+                hotspotCenter.style.display = 'block';
+            }
+        }
+
+        function changeVRView(view) {
+            currentVRView = view;
+            vrSky.setAttribute('src', borobudurViews[view]);
+            updateHotspots();
+        }
+
+        // Hotspot Events
+        hotspotLeft.addEventListener('click', () => changeVRView('left'));
+        hotspotRight.addEventListener('click', () => changeVRView('right'));
+        hotspotForward.addEventListener('click', () => changeVRView('forward'));
+        hotspotCenter.addEventListener('click', () => changeVRView('center'));
+
+        // Borobudur Marker Events
+        markerBorobudur.addEventListener('markerFound', function() {
+            console.log('✅ Marker 0 (Borobudur) detected');
+            loading.style.display = 'none';
+            infoPanelBorobudur.classList.add('show');
+            infoPanelKapak.classList.remove('show');
+            startVRBtn.classList.add('show');
+        });
+
+        markerBorobudur.addEventListener('markerLost', function() {
+            console.log('❌ Marker 0 lost');
+            loading.style.display = 'block';
+            loading.textContent = 'Marker hilang, cari Barcode 0 atau 3...';
+            infoPanelBorobudur.classList.remove('show');
+            startVRBtn.classList.remove('show');
+        });
+
+        // Start VR Button
+        startVRBtn.addEventListener('click', function() {
+            console.log('🚀 Entering VR Mode');
+            arMode.style.display = 'none';
+            vrContainer.classList.add('active');
+            currentVRView = 'center';
+            vrSky.setAttribute('src', borobudurViews.center);
+            updateHotspots();
+        });
+
+        // Exit VR Button
+        exitVRBtn.addEventListener('click', function() {
+            console.log('🚪 Exiting VR Mode');
+            vrContainer.classList.remove('active');
+            arMode.style.display = 'block';
+            loading.style.display = 'block';
+            loading.textContent = 'Kembali ke AR Mode...';
+        });
+
+        // ========== INITIALIZATION ==========
+        setTimeout(() => {
+            loading.textContent = 'Cari Barcode 3 (Kapak) atau 0 (Borobudur)...';
+        }, 2000);
+
+        updateKapakButtons();
+        updateHotspots();
+    </script>
+</body>
 </html>
