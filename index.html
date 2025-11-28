@@ -5,61 +5,221 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AR Test - Kapak & Borobudur</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <!-- GANTI CDN AR.js -->
-    <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>
+    <!-- Gunakan CDN yang lebih stabil -->
+    <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
     <style>
-        /* [CSS Anda tetap sama - bagus!] */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Courier New', monospace; 
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* ========== INSTRUCTIONS ========== */
+        #instructions {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 255, 0.95);
+            color: #000;
+            padding: 12px 25px;
+            border-radius: 25px;
+            z-index: 9998;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.6);
+            max-width: 85%;
+            transition: opacity 0.3s;
+        }
+
+        #instructions.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* ========== LOADING ========== */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ffff;
+            font-size: 16px;
+            z-index: 9997;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 30px;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            text-align: center;
+            max-width: 80%;
+        }
+
+        /* ========== CAMERA FEED ========== */
+        #camera-feed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        /* ========== INFO PANELS ========== */
+        #info-panel-kapak, #info-panel-borobudur {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 30, 30, 0.95);
+            border-top: 3px solid #00ffff;
+            box-shadow: 0 -5px 30px rgba(0, 255, 255, 0.6);
+            padding: 12px 15px;
+            color: #00ffff;
+            display: none;
+            z-index: 9999;
+            max-height: 35vh;
+            overflow-y: auto;
+        }
+
+        #info-panel-kapak.show, #info-panel-borobudur.show {
+            display: block;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .panel-header {
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00ffff;
+            border-bottom: 1px solid #00ffff;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+
+        .panel-content {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* Tambahkan style lainnya yang sudah ada... */
+        
     </style>
 </head>
 <body>
     <!-- ========== AR MODE ========== -->
     <div id="ar-mode">
-        <div id="instructions">📷 Scan Barcode 3 (Kapak) atau Barcode 0 (Borobudur)</div>
-        <div class="loading" id="loading">Memuat AR...</div>
+        <div id="instructions">
+            📷 Arahkan kamera ke marker:<br>
+            • <strong>Barcode 3</strong> untuk Kapak Genggam<br>
+            • <strong>Barcode 0</strong> untuk Borobudur VR
+        </div>
+        <div class="loading" id="loading">Memulai kamera...</div>
 
-        <button id="start-vr-btn">🕌 MULAI TUR<br>BOROBUDUR</button>
+        <!-- Camera Feed untuk Debug -->
+        <video id="camera-feed" autoplay playsinline></video>
+
+        <!-- Start VR Button -->
+        <button id="start-vr-btn">🕌 MULAI TUR BOROBUDUR</button>
 
         <!-- Info Panel Kapak -->
         <div id="info-panel-kapak">
-            <!-- [konten info panel kapak tetap] -->
+            <div class="panel-header">🪓 KAPAK GENGGAM</div>
+            <div class="panel-content">
+                <p><strong>Fungsi Utama:</strong></p>
+                <p>• Memotong daging hewan buruan</p>
+                <p>• Menguliti binatang hasil berburu</p>
+                <p>• Mengolah kayu untuk berbagai keperluan</p>
+            </div>
+            <div class="view-nav">
+                <button id="prev-view-kapak">◄ Prev</button>
+                <button id="next-view-kapak">Next ►</button>
+            </div>
+            <div class="view-indicator">
+                View: <span id="current-view-kapak">1</span> / 3
+            </div>
         </div>
 
         <!-- Info Panel Borobudur -->
         <div id="info-panel-borobudur">
-            <!-- [konten info panel borobudur tetap] -->
+            <div class="panel-header">🕌 CANDI BOROBUDUR</div>
+            <div class="panel-content">
+                <p><strong>Sejarah:</strong></p>
+                <p>Candi Borobudur adalah candi Buddha terbesar di dunia yang dibangun pada abad ke-8 Masehi.</p>
+                <p><strong>Lokasi:</strong> Magelang, Jawa Tengah</p>
+                <p><strong>Status:</strong> Situs Warisan Dunia UNESCO</p>
+            </div>
         </div>
 
-        <!-- AR Scene -->
+        <!-- AR Scene dengan konfigurasi yang diperbaiki -->
         <a-scene 
             embedded 
-            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
+            arjs="
+                sourceType: webcam;
+                debugUIEnabled: true;
+                detectionMode: mono_and_matrix;
+                matrixCodeType: 3x3;
+                maxDetectionRate: 60;
+                cameraParametersUrl: https://cdn.jsdelivr.net/npm/ar.js@3.4.5/data/data/camera_para.dat;
+            "
             vr-mode-ui="enabled: false"
-            renderer="antialias: true; alpha: true">
+            renderer="logarithmicDepthBuffer: true; precision: medium;"
+            stats
+            id="ar-scene">
             
-            <a-camera></a-camera>
+            <!-- Camera yang diperbaiki -->
+            <a-entity camera></a-entity>
 
-            <!-- Marker 3: Kapak Genggam - PERBAIKI PATH -->
-            <a-marker type="barcode" value=3 id="marker-kapak">
+            <!-- Marker 3: Kapak Genggam -->
+            <a-marker 
+                type="barcode" 
+                value="3" 
+                id="marker-kapak"
+                emitevents="true"
+                size="0.16">
                 <a-image 
                     id="kapak-image"
                     src="https://bbull0444-png.github.io/ar-test/models/kapak-genggam-1.png" 
-                    scale="1.5 1.5 1.5" 
-                    position="0 0 0" 
+                    scale="0.3 0.3 0.3" 
+                    position="0 0.1 0" 
                     rotation="-90 0 0"
-                    transparent="true"
-                    shader="flat"
-                    opacity="0.95">
+                    transparent="true">
                 </a-image>
             </a-marker>
 
-            <!-- Marker 0: Borobudur - PERBAIKI VALUE -->
-            <a-marker type="barcode" value=0 id="marker-borobudur">
+            <!-- Marker 0: Borobudur -->
+            <a-marker 
+                type="barcode" 
+                value="0" 
+                id="marker-borobudur"
+                emitevents="true"
+                size="0.16">
+                <a-box 
+                    position="0 0.1 0" 
+                    width="0.2" 
+                    height="0.2" 
+                    depth="0.2" 
+                    color="#00ffff"
+                    opacity="0.8">
+                </a-box>
                 <a-text 
-                    value="BOROBUDUR\nVR READY" 
+                    value="BOROBUDUR VR" 
                     align="center" 
                     color="#00ffff" 
                     scale="0.5 0.5 0.5"
-                    position="0 0.5 0">
+                    position="0 0.3 0">
                 </a-text>
             </a-marker>
 
@@ -68,85 +228,125 @@
 
     <!-- ========== VR MODE ========== -->
     <div id="vr-container">
-        <!-- PERBAIKI VR SCENE -->
-        <a-scene id="vr-scene" embedded vr-mode-ui="enabled: true"
-                 renderer="antialias: true; alpha: true"
-                 background="color: #000000">
-                 
-            <!-- Sky 360 - PASTIKAN PATH BENAR -->
+        <a-scene id="vr-scene" embedded vr-mode-ui="enabled: true">
             <a-sky id="vr-sky" src="https://bbull0444-png.github.io/ar-test/SvD/Borobudur-1-360.jpg" rotation="0 -130 0"></a-sky>
-
             <a-entity camera look-controls wasd-controls position="0 1.6 0">
                 <a-cursor color="#00ffff"></a-cursor>
             </a-entity>
         </a-scene>
 
-        <!-- [Navigation hotspots dan exit button tetap] -->
+        <button class="vr-hotspot" id="hotspot-left">◄ KIRI</button>
+        <button class="vr-hotspot" id="hotspot-right">KANAN ►</button>
+        <button class="vr-hotspot" id="hotspot-forward">⬆️ DEPAN</button>
+        <button class="vr-hotspot" id="hotspot-center">🏛️ TENGAH</button>
+        <button id="exit-vr-btn">🚪 KELUAR VR</button>
     </div>
 
     <script>
-        // ========== INISIALISASI ELEMENTS ==========
+        // ========== DEBUGGING & INITIALIZATION ==========
+        console.log("🚀 Initializing AR Application...");
+
+        // Elements
         const loading = document.getElementById('loading');
         const instructions = document.getElementById('instructions');
-        const arMode = document.getElementById('ar-mode');
-        const vrContainer = document.getElementById('vr-container');
+        const arScene = document.getElementById('ar-scene');
+        const cameraFeed = document.getElementById('camera-feed');
 
         // Kapak elements
         const markerKapak = document.getElementById('marker-kapak');
         const infoPanelKapak = document.getElementById('info-panel-kapak');
         const kapakImage = document.getElementById('kapak-image');
-        const prevBtnKapak = document.getElementById('prev-view-kapak');
-        const nextBtnKapak = document.getElementById('next-view-kapak');
-        const currentViewSpanKapak = document.getElementById('current-view-kapak');
 
-        // Borobudur elements
+        // Borobudur elements  
         const markerBorobudur = document.getElementById('marker-borobudur');
         const infoPanelBorobudur = document.getElementById('info-panel-borobudur');
         const startVRBtn = document.getElementById('start-vr-btn');
-        const exitVRBtn = document.getElementById('exit-vr-btn');
-        const vrSky = document.getElementById('vr-sky');
 
-        // Hotspots
-        const hotspotLeft = document.getElementById('hotspot-left');
-        const hotspotRight = document.getElementById('hotspot-right');
-        const hotspotForward = document.getElementById('hotspot-forward');
-        const hotspotCenter = document.getElementById('hotspot-center');
+        // ========== KAMERA PERMISSION ==========
+        async function initializeCamera() {
+            try {
+                loading.textContent = "Meminta izin kamera...";
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                cameraFeed.srcObject = stream;
+                loading.textContent = "Kamera siap! Scan marker sekarang...";
+                
+                console.log("✅ Camera access granted");
+                
+            } catch (error) {
+                console.error("❌ Camera error:", error);
+                loading.textContent = "Error: Tidak bisa mengakses kamera. Pastikan izin kamera diberikan.";
+                loading.style.color = "#ff0000";
+            }
+        }
 
-        // ========== KAPAK GENGGAM ==========
+        // ========== MARKER DETECTION ==========
+        function setupMarkerEvents() {
+            // Kapak Marker Events
+            markerKapak.addEventListener('markerFound', () => {
+                console.log('✅ MARKER 3 DITEMUKAN - Kapak Genggam');
+                loading.style.display = 'none';
+                infoPanelKapak.classList.add('show');
+                infoPanelBorobudur.classList.remove('show');
+                startVRBtn.classList.remove('show');
+                
+                // Tambahkan animasi
+                kapakImage.setAttribute('animation', 'property: rotation; to: -90 360 0; dur: 2000; easing: linear');
+            });
+
+            markerKapak.addEventListener('markerLost', () => {
+                console.log('❌ MARKER 3 HILANG');
+                infoPanelKapak.classList.remove('show');
+                loading.style.display = 'block';
+                loading.textContent = 'Cari marker Barcode 3 (Kapak) atau 0 (Borobudur)...';
+            });
+
+            // Borobudur Marker Events
+            markerBorobudur.addEventListener('markerFound', () => {
+                console.log('✅ MARKER 0 DITEMUKAN - Borobudur');
+                loading.style.display = 'none';
+                infoPanelBorobudur.classList.add('show');
+                infoPanelKapak.classList.remove('show');
+                startVRBtn.classList.add('show');
+            });
+
+            markerBorobudur.addEventListener('markerLost', () => {
+                console.log('❌ MARKER 0 HILANG');
+                infoPanelBorobudur.classList.remove('show');
+                startVRBtn.classList.remove('show');
+                loading.style.display = 'block';
+                loading.textContent = 'Cari marker Barcode 3 (Kapak) atau 0 (Borobudur)...';
+            });
+        }
+
+        // ========== KAPAK MULTIPLE VIEWS ==========
         const kapakViews = [
             'https://bbull0444-png.github.io/ar-test/models/kapak-genggam-1.png',
-            'https://bbull0444-png.github.io/ar-test/models/kapak-genggam-2.png',
+            'https://bbull0444-png.github.io/ar-test/models/kapak-genggam-2.png', 
             'https://bbull0444-png.github.io/ar-test/models/kapak-genggam-3.png'
         ];
         let currentKapakIndex = 0;
 
-        function updateKapakButtons() {
-            if (prevBtnKapak && nextBtnKapak) {
-                prevBtnKapak.disabled = currentKapakIndex === 0;
-                nextBtnKapak.disabled = currentKapakIndex === kapakViews.length - 1;
-                currentViewSpanKapak.textContent = currentKapakIndex + 1;
-            }
-        }
-
         function changeKapakView(direction) {
-            const newIndex = currentKapakIndex + direction;
-            if (newIndex >= 0 && newIndex < kapakViews.length) {
-                currentKapakIndex = newIndex;
-                // PRELOAD gambar sebelum ditampilkan
-                const img = new Image();
-                img.onload = function() {
-                    kapakImage.setAttribute('src', kapakViews[currentKapakIndex]);
-                };
-                img.src = kapakViews[currentKapakIndex];
-                updateKapakButtons();
-            }
+            currentKapakIndex += direction;
+            if (currentKapakIndex < 0) currentKapakIndex = kapakViews.length - 1;
+            if (currentKapakIndex >= kapakViews.length) currentKapakIndex = 0;
+            
+            kapakImage.setAttribute('src', kapakViews[currentKapakIndex]);
+            document.getElementById('current-view-kapak').textContent = currentKapakIndex + 1;
+            
+            // Reset animation
+            kapakImage.setAttribute('animation', 'property: rotation; to: -90 360 0; dur: 1000; easing: linear');
         }
 
-        // Event listeners untuk Kapak
-        if (prevBtnKapak) prevBtnKapak.addEventListener('click', () => changeKapakView(-1));
-        if (nextBtnKapak) nextBtnKapak.addEventListener('click', () => changeKapakView(1));
-
-        // ========== BOROBUDUR VR ==========
+        // ========== VR MODE ==========
         const borobudurViews = {
             center: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-1-360.jpg',
             left: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-2-360.jpg',
@@ -154,110 +354,55 @@
             forward: 'https://bbull0444-png.github.io/ar-test/SvD/Borobudur-4-360.jpg'
         };
 
-        let currentVRView = 'center';
-
-        function updateHotspots() {
-            if (currentVRView === 'center') {
-                hotspotLeft.style.display = 'block';
-                hotspotRight.style.display = 'block';
-                hotspotForward.style.display = 'block';
-                hotspotCenter.style.display = 'none';
-            } else {
-                hotspotLeft.style.display = 'none';
-                hotspotRight.style.display = 'none';
-                hotspotForward.style.display = 'none';
-                hotspotCenter.style.display = 'block';
-            }
-        }
-
         function changeVRView(view) {
-            if (borobudurViews[view]) {
-                currentVRView = view;
-                // PRELOAD gambar 360
-                const img = new Image();
-                img.onload = function() {
-                    vrSky.setAttribute('src', borobudurViews[view]);
-                };
-                img.src = borobudurViews[view];
-                updateHotspots();
-            }
+            const vrSky = document.getElementById('vr-sky');
+            vrSky.setAttribute('src', borobudurViews[view]);
         }
 
         // ========== EVENT LISTENERS ==========
-        if (markerKapak) {
-            markerKapak.addEventListener('markerFound', function() {
-                console.log('✅ Marker 3 (Kapak) detected');
-                loading.style.display = 'none';
-                infoPanelKapak.classList.add('show');
-                infoPanelBorobudur.classList.remove('show');
-                startVRBtn.classList.remove('show');
-                currentKapakIndex = 0;
-                kapakImage.setAttribute('src', kapakViews[0]);
-                updateKapakButtons();
-            });
+        document.getElementById('prev-view-kapak').addEventListener('click', () => changeKapakView(-1));
+        document.getElementById('next-view-kapak').addEventListener('click', () => changeKapakView(1));
 
-            markerKapak.addEventListener('markerLost', function() {
-                console.log('❌ Marker 3 lost');
-                loading.style.display = 'block';
-                loading.textContent = 'Marker hilang, cari Barcode 3 atau 0...';
-                infoPanelKapak.classList.remove('show');
-            });
-        }
-
-        if (markerBorobudur) {
-            markerBorobudur.addEventListener('markerFound', function() {
-                console.log('✅ Marker 0 (Borobudur) detected');
-                loading.style.display = 'none';
-                infoPanelBorobudur.classList.add('show');
-                infoPanelKapak.classList.remove('show');
-                startVRBtn.classList.add('show');
-            });
-
-            markerBorobudur.addEventListener('markerLost', function() {
-                console.log('❌ Marker 0 lost');
-                loading.style.display = 'block';
-                loading.textContent = 'Marker hilang, cari Barcode 0 atau 3...';
-                infoPanelBorobudur.classList.remove('show');
-                startVRBtn.classList.remove('show');
-            });
-        }
-
-        // VR Events
         startVRBtn.addEventListener('click', function() {
             console.log('🚀 Entering VR Mode');
-            arMode.style.display = 'none';
-            vrContainer.classList.add('active');
+            document.getElementById('ar-mode').style.display = 'none';
+            document.getElementById('vr-container').classList.add('active');
             changeVRView('center');
         });
 
-        exitVRBtn.addEventListener('click', function() {
+        document.getElementById('exit-vr-btn').addEventListener('click', function() {
             console.log('🚪 Exiting VR Mode');
-            vrContainer.classList.remove('active');
-            arMode.style.display = 'block';
-            loading.style.display = 'block';
-            loading.textContent = 'Kembali ke AR Mode...';
+            document.getElementById('vr-container').classList.remove('active');
+            document.getElementById('ar-mode').style.display = 'block';
         });
 
-        // Hotspot Events
-        hotspotLeft.addEventListener('click', () => changeVRView('left'));
-        hotspotRight.addEventListener('click', () => changeVRView('right'));
-        hotspotForward.addEventListener('click', () => changeVRView('forward'));
-        hotspotCenter.addEventListener('click', () => changeVRView('center'));
+        // VR Hotspots
+        document.getElementById('hotspot-left').addEventListener('click', () => changeVRView('left'));
+        document.getElementById('hotspot-right').addEventListener('click', () => changeVRView('right'));
+        document.getElementById('hotspot-forward').addEventListener('click', () => changeVRView('forward'));
+        document.getElementById('hotspot-center').addEventListener('click', () => changeVRView('center'));
 
         // ========== INITIALIZATION ==========
-        setTimeout(() => {
-            loading.textContent = 'Cari Barcode 3 (Kapak) atau 0 (Borobudur)...';
-        }, 2000);
-
-        // Inisialisasi awal
-        updateKapakButtons();
-        updateHotspots();
-
-        // Error handling untuk gambar
-        window.addEventListener('error', function(e) {
-            console.error('Error loading resource:', e);
-            loading.textContent = 'Error memuat resource, periksa koneksi...';
+        window.addEventListener('load', function() {
+            console.log("📦 Page fully loaded");
+            initializeCamera();
+            setupMarkerEvents();
+            
+            // Hide loading after 3 seconds
+            setTimeout(() => {
+                if (loading.style.display !== 'none') {
+                    loading.textContent = "Scan marker Barcode 3 atau 0...";
+                }
+            }, 3000);
         });
+
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e);
+            loading.innerHTML = 'Error: ' + e.message + '<br>Periksa console untuk detail.';
+            loading.style.color = '#ff0000';
+        });
+
     </script>
 </body>
 </html>
